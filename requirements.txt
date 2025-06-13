@@ -1,7 +1,9 @@
 alembic==1.15.1
 APScheduler==3.11.0
 blinker==1.9.0
+certifi==2025.4.26
 click==8.1.8
+cloudinary==1.44.0
 colorama==0.4.6
 Flask==3.1.0
 flask-cors==5.0.1
@@ -25,8 +27,10 @@ psycopg2==2.9.10
 PyJWT==2.10.1
 pytest==8.3.5
 pytz==2025.2
+six==1.17.0
 SQLAlchemy==2.0.39
 typing_extensions==4.12.2
 tzdata==2025.2
 tzlocal==5.3.1
+urllib3==2.4.0
 Werkzeug==3.1.3
