@@ -240,7 +240,6 @@ def get_nearest_tournaments():
         tournaments = Tournament.query.filter(
             Tournament.start_time > datetime.now(UTC)
         ).order_by(Tournament.start_time.asc()).limit(4).all()
-        print(tournaments)
 
         tournament_schema = TournamentSchema(
             many=True,
@@ -257,8 +256,8 @@ def get_nearest_tournaments():
             )
 
         return jsonify({'data': response}), 200
-    except Exception:
-        return jsonify({'msg': 'Ошибка при получении турниров'}), 500
+    except Exception as e:
+        return jsonify({'msg': f'Ошибка при получении турниров. {e}'}), 404
 
 
 @tournament_bp.route('/participant/me', methods=['GET'])
