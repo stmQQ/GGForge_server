@@ -1,5 +1,7 @@
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -12,6 +12,9 @@ from app.extensions import db
 from sqlalchemy.dialects.postgresql import UUID
 
 from pyuploadcare import Uploadcare
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # region User operations

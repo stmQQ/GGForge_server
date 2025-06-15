@@ -1,6 +1,9 @@
 import os
 from .base import BaseConfig
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class ProdConfig(BaseConfig):
@@ -11,3 +14,4 @@ class ProdConfig(BaseConfig):
     JWT_BLACKLIST_TOKEN_CHECKS = ["access", "refresh"]
     JWT_TOKEN_LOCATION = ['headers']
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=180)
+    API_URL = os.getenv('API_URL', 'https://ggforge-server.onrender.com')

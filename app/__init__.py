@@ -8,6 +8,9 @@ from .models import *
 from .routes import register_routes
 # from apscheduler_tasks import register_scheduler
 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def create_app():
     app = Flask(__name__, static_folder='static')

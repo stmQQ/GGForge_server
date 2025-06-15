@@ -1,4 +1,5 @@
 import json
+import os
 from urllib.parse import urlparse
 
 from pytz import UTC
@@ -27,11 +28,14 @@ from app.schemas import (
 import traceback
 
 from app.services.user_service import get_user_profile, save_image
+from dotenv import load_dotenv
+
+load_dotenv()
 
 tournament_bp = Blueprint('tournament', __name__,
                           url_prefix='/api/tournaments')
 
-API_URL = 'http://localhost:5000'
+API_URL = os.getenv('API_URL', 'https://ggforge-server.onrender.com')
 ALLOWED_DOMAINS = {
     'youtube.com',
     'youtu.be',
