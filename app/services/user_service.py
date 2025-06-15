@@ -150,7 +150,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
 
     # Загрузка файла в Uploadcare
     try:
-        with file_storage.stream as f:
+        with open(file_storage.stream, 'rb') as f:
             uploaded_file = uploadcare.upload(
                 f, store=True, filename=storage_path)
     except Exception as e:
