@@ -156,7 +156,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         with open(temp_file_path, 'rb') as f:
             print(f"File stream type: {type(f)}")
             uploaded_file = uploadcare.upload(
-                f, store=True, filename=storage_path)
+                f, store=True)
 
         # Удаляем временный файл
         os.unlink(temp_file_path)
