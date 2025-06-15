@@ -1,4 +1,5 @@
 import os
+import traceback
 import uuid
 
 from flask import current_app
@@ -95,19 +96,12 @@ def allowed_file(filename):
 
 
 def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
-    """Сохраняет изображение в Uploadcare с проверками.
+    """Сохраняет изображение в Uploadcare с проверками."""
+    # Проверка типа file_storage
+    if not isinstance(file_storage, FileStorage):
+        raise ValueError(
+            f'Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}')
 
-    Args:
-        file_storage: Объект файла (например, request.files['file']).
-        image_type: Тип изображения ('avatar', 'team_logo', 'tournament', 'general', 'game_image', 'game_logo').
-        entity_id: ID сущности (user_id, team_id, tournament_id), если требуется поддиректория.
-
-    Returns:
-        Относительный путь для доступа через /static/ (например, '/static/avatars/<user_id>/<uuid>.jpg').
-
-    Raises:
-        ValueError: Если файл не предоставлен, формат недопустим, размер превышен или тип изображения неверный.
-    """
     if not file_storage:
         raise ValueError('Файл не предоставлен')
 
@@ -122,7 +116,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     if file_size_mb > MAX_FILE_SIZE_MB:
         raise ValueError('Файл слишком большой. Максимальный размер — 2MB')
 
-    # Определение поддиректории в зависимости от типа изображения
+    # Определение поддиректории
     base_path = 'static'
     sub_path = {
         'avatar': f'avatars/{entity_id}' if entity_id else 'avatars',
@@ -147,17 +141,20 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         public_key=os.getenv('UPLOADCARE_PUBLIC_KEY'),
         secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
     )
-    print(file_storage)
-    print(type(file_storage.stream))
-    # Загрузка файла в Uploadcare
-    try:
-        with file_storage.stream as f:
-            uploaded_file = uploadcare.upload(
-                f)  # , filename=storage_path
-    except Exception as e:
-        raise ValueError(f'Ошибка загрузки в Uploadcare: {str(e)}')
 
-    # Возвращаем относительный путь, совместимый с /static/*
+    # Загрузка файла с трассировкой
+    try:
+        print(
+            f"file_storage type: {type(file_storage)}, stream type: {type(file_storage.stream)}")
+        uploaded_file = uploadcare.upload(
+            file_storage.stream, store=True, filename=storage_path)
+    except Exception as e:
+        # Выводим полный стек ошибки
+        error_trace = ''.join(traceback.format_exc())
+        print(f"Uploadcare error: {str(e)}\nStack trace:\n{error_trace}")
+        raise ValueError(
+            f'Ошибка загрузки в Uploadcare: {str(e)}\nStack trace:\n{error_trace}')
+
     return f"/{base_path}/{storage_path}"
 
 
