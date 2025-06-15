@@ -99,10 +99,11 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     """Сохраняет изображение в Uploadcare с проверками."""
     # Проверка типа file_storage
     if not isinstance(file_storage, FileStorage):
-        raise ValueError(
-            f'Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}')
+        error_msg = f'Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}'
+        print(error_msg)
+        raise ValueError(error_msg)
 
-    if not file_storage:
+    if not file_storage or not file_storage.filename:
         raise ValueError('Файл не предоставлен')
 
     # Проверка расширения
@@ -142,16 +143,33 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
     )
 
-    # Загрузка файла с трассировкой
+    # Сохранение во временный файл и загрузка
     try:
-        print(
-            f"file_storage type: {type(file_storage)}, stream type: {type(file_storage.stream)}")
-        with open(file_storage.filename, 'rb') as f:
+        # Создаём временный файл
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
+            file_storage.save(temp_file.name)
+            temp_file_path = temp_file.name
+            print(f"Saved temp file at: {temp_file_path}")
+
+        # Открываем временный файл для чтения
+        with open(temp_file_path, 'rb') as f:
+            print(f"File stream type: {type(f)}")
             uploaded_file = uploadcare.upload(
-                # , store=True, filename=storage_path
                 f, store=True, filename=storage_path)
+
+        # Удаляем временный файл
+        os.unlink(temp_file_path)
+        print(f"Deleted temp file: {temp_file_path}")
+
     except Exception as e:
-        # Выводим полный стек ошибки
+        # Удаляем временный файл, если он существует
+        if 'temp_file_path' in locals():
+            try:
+                os.unlink(temp_file_path)
+                print(f"Deleted temp file on error: {temp_file_path}")
+            except:
+                pass
+        # Выводим стек ошибки
         error_trace = ''.join(traceback.format_exc())
         print(f"Uploadcare error: {str(e)}\nStack trace:\n{error_trace}")
         raise ValueError(
