@@ -176,7 +176,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         raise ValueError(
             f'Ошибка загрузки в Uploadcare: {str(e)}\nStack trace:\n{error_trace}')
 
-    return f"/{base_path}/{storage_path}"
+    return f"{base_path}/{storage_path}"
 
 
 def delete_image(image_path):

@@ -31,7 +31,7 @@ def create_app():
     )
 
     # Проксирование файлов
-    @app.route('static/<path:filename>')
+    @app.route('/static/<path:filename>')
     def serve_static(filename):
         try:
             file_obj = uploadcare.file(filename)
