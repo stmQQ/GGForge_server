@@ -1,7 +1,7 @@
 import os
-import cloudinary
+from pyuploadcare import Uploadcare
 
-from flask import Flask, redirect
+from flask import Flask, make_response, redirect
 from .extensions import db, migrate, cors, jwt, ma
 from .config import config_by_name
 from .models import *
@@ -20,15 +20,22 @@ def create_app():
     jwt.init_app(app)
     ma.init_app(app)
 
-    cloudinary.config(
-        cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
-        api_key=os.getenv('CLOUDINARY_API_KEY'),
-        api_secret=os.getenv('CLOUDINARY_API_SECRET')
+    # Инициализация Uploadcare
+    uploadcare = Uploadcare(
+        public_key=os.getenv('UPLOADCARE_PUBLIC_KEY'),
+        secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
     )
 
+    # Проксирование файлов
     @app.route('/static/<path:filename>')
     def serve_static(filename):
-        cloudinary_url = cloudinary.utils.cloudinary_url(filename)[0]
-        return redirect(cloudinary_url)
-
+        try:
+            file_obj = uploadcare.file(filename)
+            # Пример трансформации: сжатие и ресайз
+            url = file_obj.cdn_url + '-/resize/300x300/-/quality/lightest/'
+            response = make_response(redirect(url))
+            response.headers['Cache-Control'] = 'public, max-age=31536000'
+            return response
+        except Exception as e:
+            return {'error': f'Файл не найден: {str(e)}'}, 404
     return app

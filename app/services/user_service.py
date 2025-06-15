@@ -6,9 +6,12 @@ from app.models.game_models import Game
 from app.models.user_models import User, Connection, GameAccount, UserRequest, TokenBlocklist, SupportToken
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
 from datetime import datetime, timedelta, UTC
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import UUID
+
+from pyuploadcare import Uploadcare
 
 
 # region User operations
@@ -88,8 +91,8 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def save_image(file_storage, image_type, entity_id=None):
-    """Сохраняет изображение в указанную директорию с проверками.
+def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
+    """Сохраняет изображение в Uploadcare с проверками.
 
     Args:
         file_storage: Объект файла (например, request.files['file']).
@@ -97,7 +100,10 @@ def save_image(file_storage, image_type, entity_id=None):
         entity_id: ID сущности (user_id, team_id, tournament_id), если требуется поддиректория.
 
     Returns:
-        Относительный путь к сохранённому файлу (например, '/static/avatars/<user_id>/<uuid>.jpg').
+        Относительный путь для доступа через /static/ (например, '/static/avatars/<user_id>/<uuid>.jpg').
+
+    Raises:
+        ValueError: Если файл не предоставлен, формат недопустим, размер превышен или тип изображения неверный.
     """
     if not file_storage:
         raise ValueError('Файл не предоставлен')
@@ -113,7 +119,7 @@ def save_image(file_storage, image_type, entity_id=None):
     if file_size_mb > MAX_FILE_SIZE_MB:
         raise ValueError('Файл слишком большой. Максимальный размер — 2MB')
 
-    # Определение директории в зависимости от типа изображения
+    # Определение поддиректории в зависимости от типа изображения
     base_path = 'static'
     sub_path = {
         'avatar': f'avatars/{entity_id}' if entity_id else 'avatars',
@@ -130,16 +136,25 @@ def save_image(file_storage, image_type, entity_id=None):
     ext = os.path.splitext(secure_filename(file_storage.filename))[1]
     filename = f"{uuid.uuid4().hex}{ext}"
 
-    # Создание директории
-    save_dir = os.path.join(current_app.root_path, base_path, sub_path)
-    os.makedirs(save_dir, exist_ok=True)
+    # Формирование пути для Uploadcare
+    storage_path = f"{sub_path}/{filename}"
 
-    # Сохранение файла
-    save_path = os.path.join(save_dir, filename)
-    file_storage.save(save_path)
+    # Инициализация Uploadcare
+    uploadcare = Uploadcare(
+        public_key=os.getenv('UPLOADCARE_PUBLIC_KEY'),
+        secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
+    )
 
-    # Возвращаем относительный путь
-    return f"{base_path}/{sub_path}/{filename}"
+    # Загрузка файла в Uploadcare
+    try:
+        with file_storage.stream as f:
+            uploaded_file = uploadcare.upload(
+                f, store=True, filename=storage_path)
+    except Exception as e:
+        raise ValueError(f'Ошибка загрузки в Uploadcare: {str(e)}')
+
+    # Возвращаем относительный путь, совместимый с /static/*
+    return f"/{base_path}/{storage_path}"
 
 
 def delete_image(image_path):
