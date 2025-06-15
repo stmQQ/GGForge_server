@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def create_app():
     app = Flask(__name__, static_folder='static')
     app.config.from_object(config_by_name['dev'])
@@ -30,7 +31,7 @@ def create_app():
     )
 
     # Проксирование файлов
-    @app.route('/static/<path:filename>')
+    @app.route('static/<path:filename>')
     def serve_static(filename):
         try:
             file_obj = uploadcare.file(filename)
