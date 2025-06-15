@@ -147,7 +147,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         print(
             f"file_storage type: {type(file_storage)}, stream type: {type(file_storage.stream)}")
         uploaded_file = uploadcare.upload(
-            file_storage.stream, store=True, filename=storage_path)
+            file_storage.stream)  # , store=True, filename=storage_path
     except Exception as e:
         # Выводим полный стек ошибки
         error_trace = ''.join(traceback.format_exc())
