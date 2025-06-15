@@ -147,7 +147,8 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         public_key=os.getenv('UPLOADCARE_PUBLIC_KEY'),
         secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
     )
-
+    print(file_storage)
+    print(type(file_storage.stream))
     # Загрузка файла в Uploadcare
     try:
         with file_storage.stream as f:
