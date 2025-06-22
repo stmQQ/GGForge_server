@@ -100,11 +100,10 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     """Сохраняет изображение в Uploadcare с проверками."""
     # Проверка типа file_storage
     if not isinstance(file_storage, FileStorage):
-        error_msg = f'Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}'
-        print(error_msg)
-        raise ValueError(error_msg)
+        raise ValueError(
+            f'Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}')
 
-    if not file_storage or not file_storage.filename:
+    if not file_storage:
         raise ValueError('Файл не предоставлен')
 
     # Проверка расширения
@@ -137,6 +136,8 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
 
     # Формирование пути для Uploadcare
     storage_path = f"{sub_path}/{filename}"
+    new_file_storage = FileStorage(
+        stream=file_storage.stream, filename=storage_path, content_type=file_storage.content_type)
 
     # Инициализация Uploadcare
     uploadcare = Uploadcare(
@@ -144,33 +145,15 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
     )
 
-    # Сохранение во временный файл и загрузка
+    # Загрузка файла с трассировкой
     try:
-        # Создаем временный файл с нужным расширением
-        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=ext) as temp_file:
-            file_storage.save(temp_file.name)
-            temp_file_path = temp_file.name
-
-        # Загрузка файла в Uploadcare
-        with open(temp_file_path, 'wb') as f:
-            # Передаем только имя файла без пути, путь сохраняется в метаданных
-            f.name = storage_path
+        print(
+            f"file_storage type: {type(new_file_storage)}, stream type: {type(new_file_storage.stream)}")
+        with open(new_file_storage.filename, 'rb') as f:
             uploaded_file = uploadcare.upload(
-                f, store=True)
-
-        # Удаляем временный файл
-        os.unlink(temp_file_path)
-        print(f"Deleted temp file: {temp_file_path}")
-
+                f, store=True)git sta
     except Exception as e:
-        # Удаляем временный файл, если он существует
-        if 'temp_file_path' in locals():
-            try:
-                os.unlink(temp_file_path)
-                print(f"Deleted temp file on error: {temp_file_path}")
-            except:
-                pass
-        # Выводим стек ошибки
+        # Выводим полный стек ошибки
         error_trace = ''.join(traceback.format_exc())
         print(f"Uploadcare error: {str(e)}\nStack trace:\n{error_trace}")
         raise ValueError(
