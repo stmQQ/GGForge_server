@@ -136,8 +136,6 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
 
     # Формирование пути для Uploadcare
     storage_path = f"{sub_path}/{filename}"
-    new_file_storage = FileStorage(
-        stream=file_storage.stream, filename=storage_path, content_type=file_storage.content_type)
 
     # Инициализация Uploadcare
     uploadcare = Uploadcare(
@@ -148,10 +146,12 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     # Загрузка файла с трассировкой
     try:
         print(
-            f"file_storage type: {type(new_file_storage)}, stream type: {type(new_file_storage.stream)}")
-        with open(new_file_storage.filename, 'rb') as f:
+            f"file_storage type: {type(file_storage)}, stream type: {type(file_storage.stream)}")
+        with open(file_storage.filename, 'rb') as f:
+            new_file_storage = FileStorage(
+                stream=file_storage.stream, filename=storage_path, content_type=file_storage.content_type)
             uploaded_file = uploadcare.upload(
-                f, store=True)
+                new_file_storage.stream, store=True)
     except Exception as e:
         # Выводим полный стек ошибки
         error_trace = ''.join(traceback.format_exc())
