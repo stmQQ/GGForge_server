@@ -151,7 +151,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
             f"file_storage type: {type(new_file_storage)}, stream type: {type(new_file_storage.stream)}")
         with open(new_file_storage.filename, 'rb') as f:
             uploaded_file = uploadcare.upload(
-                f, store=True)git sta
+                f, store=True)
     except Exception as e:
         # Выводим полный стек ошибки
         error_trace = ''.join(traceback.format_exc())
