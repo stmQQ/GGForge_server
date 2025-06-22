@@ -136,7 +136,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     filename = f"{uuid.uuid4().hex}{ext}"
 
     # Формирование пути для Uploadcare
-    storage_path = f"{sub_path}/{filename}"
+    storage_path = f"{base_path}/{sub_path}/{filename}"
 
     # Инициализация Uploadcare
     uploadcare = Uploadcare(
@@ -146,17 +146,16 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
 
     # Сохранение во временный файл и загрузка
     try:
-        # Создаём временный файл
+        # Создаем временный файл с нужным расширением
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
             file_storage.save(temp_file.name)
             temp_file_path = temp_file.name
-            print(f"Saved temp file at: {temp_file_path}")
 
-        # Открываем временный файл для чтения
+        # Загрузка файла в Uploadcare
         with open(temp_file_path, 'rb') as f:
-            print(f"File stream type: {type(f)}")
+            # Передаем только имя файла без пути, путь сохраняется в метаданных
             uploaded_file = uploadcare.upload(
-                f, store=True)
+                f, store=True, metadata={'path': storage_path})
 
         # Удаляем временный файл
         os.unlink(temp_file_path)
