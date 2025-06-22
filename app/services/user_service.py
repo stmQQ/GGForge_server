@@ -1,3 +1,4 @@
+from io import BytesIO
 import os
 import tempfile
 import traceback
@@ -142,13 +143,16 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         public_key=os.getenv('UPLOADCARE_PUBLIC_KEY'),
         secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
     )
-
+    file_data = BytesIO(file_storage.read())
+    file_data.name = filename  # Устанавливаем имя файла
+    # Возвращаем указатель в начало для возможного повторного использования
+    file_storage.seek(0)
     # Загрузка файла с трассировкой
     try:
         print(
             f"file_storage type: {type(file_storage)}, stream type: {type(file_storage.stream)}")
         # Передаем поток file_storage.stream напрямую в uploadcare.upload
-        uploaded_file = uploadcare.upload(file_storage.stream, store=True)
+        uploaded_file = uploadcare.upload(file_data, store=True)
     except Exception as e:
         error_trace = ''.join(traceback.format_exc())
         print(f"Uploadcare error: {str(e)}\nStack trace:\n{error_trace}")
