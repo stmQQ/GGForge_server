@@ -147,13 +147,9 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     try:
         print(
             f"file_storage type: {type(file_storage)}, stream type: {type(file_storage.stream)}")
-        with open(file_storage.filename, 'rb') as f:
-            new_file_storage = FileStorage(
-                stream=file_storage.stream, filename=storage_path, content_type=file_storage.content_type)
-            uploaded_file = uploadcare.upload(
-                new_file_storage.stream, store=True)
+        # Передаем поток file_storage.stream напрямую в uploadcare.upload
+        uploaded_file = uploadcare.upload(file_storage.stream, store=True)
     except Exception as e:
-        # Выводим полный стек ошибки
         error_trace = ''.join(traceback.format_exc())
         print(f"Uploadcare error: {str(e)}\nStack trace:\n{error_trace}")
         raise ValueError(
