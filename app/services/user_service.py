@@ -147,12 +147,12 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     # Сохранение во временный файл и загрузка
     try:
         # Создаем временный файл с нужным расширением
-        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=ext) as temp_file:
             file_storage.save(temp_file.name)
             temp_file_path = temp_file.name
 
         # Загрузка файла в Uploadcare
-        with open(temp_file_path, 'rb') as f:
+        with open(temp_file_path, 'wb') as f:
             # Передаем только имя файла без пути, путь сохраняется в метаданных
             f.name = storage_path
             uploaded_file = uploadcare.upload(
