@@ -155,7 +155,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         with open(temp_file_path, 'rb') as f:
             # Передаем только имя файла без пути, путь сохраняется в метаданных
             uploaded_file = uploadcare.upload(
-                f, store=True, metadata={'path': storage_path})
+                f, store=True, metadata={'filename': storage_path})
 
         # Удаляем временный файл
         os.unlink(temp_file_path)
