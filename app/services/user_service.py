@@ -3,6 +3,7 @@ import os
 import tempfile
 import traceback
 import uuid
+import boto3
 
 from flask import current_app
 from app.models.game_models import Game
@@ -16,6 +17,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from pyuploadcare import Uploadcare
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -91,6 +93,15 @@ def get_user_profile(user_id):
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 MAX_FILE_SIZE_MB = 2
 
+session = boto3.session.Session()
+s3_client = session.client(
+    service_name='s3',
+    endpoint_url='https://storage.yandexcloud.net',
+    aws_access_key_id=os.getenv('YANDEX_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('YANDEX_SECRET_KEY')
+)
+BUCKET_NAME = os.getenv('YANDEX_BUCKET_NAME')
+
 
 def allowed_file(filename):
     """Проверяет, допустимое ли расширение файла."""
@@ -98,7 +109,7 @@ def allowed_file(filename):
 
 
 def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
-    """Сохраняет изображение в Uploadcare с проверками."""
+    """Сохраняет изображение в Yandex Object Storage с проверками."""
     # Проверка типа file_storage
     if not isinstance(file_storage, FileStorage):
         raise ValueError(
@@ -134,32 +145,25 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     # Формирование имени файла
     ext = os.path.splitext(secure_filename(file_storage.filename))[1]
     filename = f"{uuid.uuid4().hex}{ext}"
-
-    # Формирование пути для Uploadcare
     storage_path = f"{sub_path}/{filename}"
 
-    # Инициализация Uploadcare
-    uploadcare = Uploadcare(
-        public_key=os.getenv('UPLOADCARE_PUBLIC_KEY'),
-        secret_key=os.getenv('UPLOADCARE_SECRET_KEY')
-    )
-    file_data = BytesIO(file_storage.read())
-    file_data.name = filename  # Устанавливаем имя файла
-    # Возвращаем указатель в начало для возможного повторного использования
-    file_storage.seek(0)
-    # Загрузка файла с трассировкой
+    # Загрузка файла
     try:
         print(
-            f"file_storage type: {type(file_storage)}, stream type: {type(file_storage.stream)}")
-        # Передаем поток file_storage.stream напрямую в uploadcare.upload
-        uploaded_file = uploadcare.upload(file_data, store=True)
+            f"file_storage type: {type(file_storage)}, filename: {file_storage.filename}")
+        s3_client.upload_fileobj(
+            file_storage,
+            BUCKET_NAME,
+            storage_path,
+            ExtraArgs={'ACL': 'public-read'}  # Делаем файл публичным
+        )
+        file_url = f"https://{BUCKET_NAME}.storage.yandexcloud.net/{storage_path}"
+        return f"{base_path}/{storage_path}"
     except Exception as e:
         error_trace = ''.join(traceback.format_exc())
-        print(f"Uploadcare error: {str(e)}\nStack trace:\n{error_trace}")
+        print(f"Yandex Cloud error: {str(e)}\nStack trace:\n{error_trace}")
         raise ValueError(
-            f'Ошибка загрузки в Uploadcare: {str(e)}\nStack trace:\n{error_trace}')
-
-    return f"{base_path}/{storage_path}"
+            f"Ошибка загрузки в Yandex Cloud: {str(e)}\n{error_trace}")
 
 
 def delete_image(image_path):
