@@ -15,7 +15,6 @@ from datetime import datetime, timedelta, UTC
 from app.extensions import db
 from sqlalchemy.dialects.postgresql import UUID
 
-from pyuploadcare import Uploadcare
 from dotenv import load_dotenv
 
 
@@ -101,6 +100,7 @@ s3_client = session.client(
     aws_secret_access_key=os.getenv('YANDEX_SECRET_KEY')
 )
 BUCKET_NAME = os.getenv('YANDEX_BUCKET_NAME')
+s3_client.create_bucket(Bucket=BUCKET_NAME)
 
 
 def allowed_file(filename):
@@ -151,7 +151,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     try:
         print(
             f"file_storage type: {type(file_storage)}, filename: {file_storage.filename}")
-        s3_client.upload_fileobj(
+        s3_client.upload_file(
             file_storage,
             BUCKET_NAME,
             storage_path,
