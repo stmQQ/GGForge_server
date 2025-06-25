@@ -100,7 +100,7 @@ s3_client = session.client(
     aws_secret_access_key=os.getenv('YANDEX_SECRET_KEY')
 )
 BUCKET_NAME = os.getenv('YANDEX_BUCKET_NAME')
-s3_client.create_bucket(Bucket=BUCKET_NAME)
+# print(BUCKET_NAME)
 
 
 def allowed_file(filename):
