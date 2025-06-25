@@ -20,8 +20,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+YANDEX_ACCESS_KEY_ID = os.getenv('YANDEX_ACCESS_KEY_ID')
+YANDEX_SECRET_KEY = os.getenv('YANDEX_SECRET_KEY')
+BUCKET_NAME = os.getenv('YANDEX_BUCKET_NAME')
+
+if not all([YANDEX_ACCESS_KEY_ID, YANDEX_SECRET_KEY, BUCKET_NAME]):
+    missing_vars = [var for var in ['YANDEX_ACCESS_KEY_ID',
+                                    'YANDEX_SECRET_KEY', 'YANDEX_BUCKET_NAME'] if not os.getenv(var)]
+    print(f"Отсутствуют переменные окружения: {', '.join(missing_vars)}")
+    raise ValueError(
+        f"Отсутствуют переменные окружения: {', '.join(missing_vars)}")
+
+# Настройка Yandex Cloud Object Storage
+session = boto3.session.Session()
+s3_client = session.client(
+    service_name='s3',
+    endpoint_url='https://storage.yandexcloud.net',
+    aws_access_key_id=YANDEX_ACCESS_KEY_ID,
+    aws_secret_access_key=YANDEX_SECRET_KEY
+)
 
 # region User operations
+
 
 def create_user(name, email, password, avatar="default", is_admin=False):
     """Создает нового пользователя"""
@@ -92,14 +112,7 @@ def get_user_profile(user_id):
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 MAX_FILE_SIZE_MB = 2
 
-session = boto3.session.Session()
-s3_client = session.client(
-    service_name='s3',
-    endpoint_url='https://storage.yandexcloud.net',
-    aws_access_key_id=os.getenv('YANDEX_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('YANDEX_SECRET_KEY')
-)
-BUCKET_NAME = os.getenv('YANDEX_BUCKET_NAME')
+
 # print(BUCKET_NAME)
 
 
@@ -112,14 +125,18 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     """Сохраняет изображение в Yandex Object Storage с проверками."""
     # Проверка типа file_storage
     if not isinstance(file_storage, FileStorage):
+        print(
+            f"Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}")
         raise ValueError(
-            f'Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}')
+            f"Неверный тип file_storage: ожидается FileStorage, получен {type(file_storage)}")
 
     if not file_storage:
+        print("Файл не предоставлен")
         raise ValueError('Файл не предоставлен')
 
     # Проверка расширения
     if not allowed_file(file_storage.filename):
+        print(f"Недопустимый формат файла: {file_storage.filename}")
         raise ValueError('Недопустимый формат файла')
 
     # Проверка размера
@@ -127,7 +144,10 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     file_size_mb = file_storage.tell() / (1024 * 1024)
     file_storage.seek(0)
     if file_size_mb > MAX_FILE_SIZE_MB:
-        raise ValueError('Файл слишком большой. Максимальный размер — 2MB')
+        print(
+            f"Файл слишком большой: {file_size_mb} MB, максимум {MAX_FILE_SIZE_MB} MB")
+        raise ValueError(
+            f"Файл слишком большой. Максимальный размер — {MAX_FILE_SIZE_MB}MB")
 
     # Определение поддиректории
     base_path = 'static'
@@ -140,6 +160,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         'game_logo': 'games/logos',
     }.get(image_type)
     if not sub_path:
+        print(f"Недопустимый тип изображения: {image_type}")
         raise ValueError('Недопустимый тип изображения')
 
     # Формирование имени файла
@@ -150,14 +171,15 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
     # Загрузка файла
     try:
         print(
-            f"file_storage type: {type(file_storage)}, filename: {file_storage.filename}")
-        s3_client.upload_file(
+            f"Загрузка файла: type={type(file_storage)}, filename={file_storage.filename}, storage_path={storage_path}")
+        s3_client.upload_fileobj(
             file_storage,
             BUCKET_NAME,
             storage_path,
             ExtraArgs={'ACL': 'public-read'}  # Делаем файл публичным
         )
         file_url = f"https://{BUCKET_NAME}.storage.yandexcloud.net/{storage_path}"
+        print(f"Файл успешно загружен: {file_url}")
         return f"{base_path}/{storage_path}"
     except Exception as e:
         error_trace = ''.join(traceback.format_exc())
@@ -167,17 +189,31 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
 
 
 def delete_image(image_path):
-    """Удаляет изображение, если оно не дефолтное.
+    """Удаляет изображение из Yandex Object Storage, если оно не дефолтное.
 
     Args:
-        image_path: Путь к файлу (например, '/static/avatars/<user_id>/<uuid>.jpg').
+        image_path: Путь к файлу (например, 'static/avatars/<user_id>/<uuid>.jpg').
     """
     if not image_path or any(default in image_path for default in ['default.png', 'games/images', 'games/logos']):
+        print(f"Пропуск удаления: {image_path} является дефолтным или пустым")
         return  # Нельзя удалять дефолтные изображения
 
-    full_path = os.path.join(current_app.root_path, image_path.lstrip("/"))
-    if os.path.exists(full_path):
-        os.remove(full_path)
+    # Извлекаем путь в бакете, убирая префикс 'static/'
+    object_key = image_path.lstrip('static/').lstrip('/')
+
+    try:
+        # Проверяем существование файла
+        s3_client.head_object(Bucket=BUCKET_NAME, Key=object_key)
+        # Удаляем файл
+        s3_client.delete_object(Bucket=BUCKET_NAME, Key=object_key)
+        print(f"Файл успешно удален: {object_key}")
+    except s3_client.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            print(f"Файл не найден в бакете: {object_key}")
+        else:
+            print(f"Ошибка удаления в Yandex Cloud: {str(e)}")
+    except Exception as e:
+        print(f"Общая ошибка при удалении: {str(e)}")
 
 
 # endregion
