@@ -1,3 +1,4 @@
+import os
 import uuid
 from app.models import Match, PlayoffStageMatch, Map
 from app.extensions import db

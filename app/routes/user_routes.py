@@ -105,6 +105,9 @@ def delete_my_profile():
 
     if not user:
         return jsonify({'msg': 'Пользователь не найден'}), 404
+    
+    if user.avatar:
+        delete_image(user.avatar)
 
     db.session.delete(user)
     db.session.commit()

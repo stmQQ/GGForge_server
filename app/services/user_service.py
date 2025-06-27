@@ -122,7 +122,7 @@ def allowed_file(filename):
 
 
 def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
-    """Сохраняет изображение в Yandex Object Storage с проверками."""
+    """Сохраняет изображение в Yandex Object Storage и возвращает полный URL."""
     # Проверка типа file_storage
     if not isinstance(file_storage, FileStorage):
         print(
@@ -150,7 +150,6 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
             f"Файл слишком большой. Максимальный размер — {MAX_FILE_SIZE_MB}MB")
 
     # Определение поддиректории
-    base_path = 'static'
     sub_path = {
         'avatar': f'avatars/{entity_id}' if entity_id else 'avatars',
         'team_logo': f'team_logos/{entity_id}' if entity_id else 'team_logos',
@@ -180,7 +179,7 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
         )
         file_url = f"https://{BUCKET_NAME}.storage.yandexcloud.net/{storage_path}"
         print(f"Файл успешно загружен: {file_url}")
-        return f"{base_path}/{storage_path}"
+        return file_url  # Возвращаем полный URL
     except Exception as e:
         error_trace = ''.join(traceback.format_exc())
         print(f"Yandex Cloud error: {str(e)}\nStack trace:\n{error_trace}")
@@ -188,18 +187,23 @@ def save_image(file_storage: FileStorage, image_type: str, entity_id=None):
             f"Ошибка загрузки в Yandex Cloud: {str(e)}\n{error_trace}")
 
 
-def delete_image(image_path):
+def delete_image(image_url):
     """Удаляет изображение из Yandex Object Storage, если оно не дефолтное.
 
     Args:
-        image_path: Путь к файлу (например, 'static/avatars/<user_id>/<uuid>.jpg').
+        image_url: Полный URL файла (например, 'https://<bucket>.storage.yandexcloud.net/avatars/<user_id>/<uuid>.jpg').
     """
-    if not image_path or any(default in image_path for default in ['default.png', 'games/images', 'games/logos']):
-        print(f"Пропуск удаления: {image_path} является дефолтным или пустым")
+    if not image_url or any(default in image_url for default in ['default.png', 'games/images', 'games/logos']):
+        print(f"Пропуск удаления: {image_url} является дефолтным или пустым")
         return  # Нельзя удалять дефолтные изображения
 
-    # Извлекаем путь в бакете, убирая префикс 'static/'
-    object_key = image_path.lstrip('static/').lstrip('/')
+    # Извлекаем ключ объекта из URL
+    try:
+        object_key = image_url.split(
+            f"https://{BUCKET_NAME}.storage.yandexcloud.net/")[-1]
+    except IndexError:
+        print(f"Некорректный URL: {image_url}")
+        return
 
     try:
         # Проверяем существование файла
@@ -214,7 +218,6 @@ def delete_image(image_path):
             print(f"Ошибка удаления в Yandex Cloud: {str(e)}")
     except Exception as e:
         print(f"Общая ошибка при удалении: {str(e)}")
-
 
 # endregion
 
