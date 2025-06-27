@@ -43,7 +43,7 @@ def register():
         return jsonify({'msg': 'Пользователь с таким именем или email уже существует'}), 409
 
     access_token = create_access_token(identity=str(
-        user.id), expires_delta=timedelta(minutes=30))
+        user.id), expires_delta=timedelta(hours=2))
     refresh_token = create_refresh_token(identity=str(user.id))
 
     user_schema = UserSchema(only=('id', 'name', 'email', 'avatar'))
@@ -79,7 +79,8 @@ def login():
     refresh_token = create_refresh_token(identity=str(user.id))
     db.session.add(user)
     db.session.commit()
-    user_schema = UserSchema(only=('id', 'name', 'email', 'avatar', 'is_online', 'registration_date'))
+    user_schema = UserSchema(
+        only=('id', 'name', 'email', 'avatar', 'is_online', 'registration_date'))
     return {
         'access_token': access_token,
         'refresh_token': refresh_token,

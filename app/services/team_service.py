@@ -6,6 +6,8 @@ from app.models import Team, User, UserRequest
 from flask_jwt_extended import get_jwt_identity
 from datetime import datetime, UTC
 
+from app.services.user_service import delete_image, save_image
+
 
 def get_current_user() -> User:
     """Get the current user from JWT identity."""
@@ -67,7 +69,8 @@ def update_team(team_id: UUID, title: str = None, description: str = None, logo_
     if description is not None:
         team.description = description.strip() if description else None
     if logo_path is not None:
-        team.logo_path = logo_path.strip() if logo_path else None
+        delete_image(team.logo_path)
+        team.logo_path = save_image(logo_path) if logo_path else None
 
     return team
 
@@ -81,6 +84,8 @@ def delete_team(team_id: UUID) -> None:
     current_user = get_current_user()
     if team.leader_id != current_user.id:
         raise PermissionError("Only the team leader can delete the team")
+    if team.logo_path:
+        delete_image(team.logo_path)
 
     db.session.delete(team)
 

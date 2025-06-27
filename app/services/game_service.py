@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 from app.extensions import db
 from app.models import Game, Achievement, User
+from app.services.user_service import delete_image
 
 
 def get_all_games():
@@ -69,6 +70,11 @@ def delete_game(game_id: UUID):
     if game.tournaments or game.achievements:
         raise ValueError(
             "Cannot delete game with associated tournaments or achievements")
+
+    if game.image_path:
+        delete_image(game.image_path)
+    if game.logo_path:
+        delete_image(game.logo_path)
 
     db.session.delete(game)
     db.session.commit()
