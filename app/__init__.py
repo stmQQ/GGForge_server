@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, make_response, redirect
+from flask import Flask, jsonify, make_response, redirect, request
 from .extensions import db, migrate, cors, jwt, ma
 from .config import config_by_name
 from .models import *
@@ -35,5 +35,11 @@ def create_app():
                   r"/api/*": {"origins": app.config['CORS_ORIGINS']}})
     jwt.init_app(app)
     ma.init_app(app)
+
+    @app.route('/api/ping', methods=['GET', 'OPTIONS'])
+    def ping():
+        if request.method == 'OPTIONS':
+            return '', 204
+        return jsonify({'status': 'ok'}), 200
 
     return app
