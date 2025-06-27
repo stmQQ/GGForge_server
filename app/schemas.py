@@ -55,7 +55,7 @@ class SupportTokenSchema(SQLAlchemyAutoSchema):
         include_fk = True
         load_instance = True
 
-    user = fields.Nested('UserSchema', only=('id', 'name'))
+    user = fields.Nested('UserSchema', only=('id', 'name', 'avatar'))
 
 
 class UserRequestSchema(SQLAlchemyAutoSchema):
@@ -68,8 +68,8 @@ class UserRequestSchema(SQLAlchemyAutoSchema):
     id = fields.UUID()
     from_user_id = fields.UUID()
     to_user_id = fields.UUID()
-    from_user = fields.Nested('UserSchema', only=('id', 'name'))
-    to_user = fields.Nested('UserSchema', only=('id', 'name'))
+    from_user = fields.Nested('UserSchema', only=('id', 'name', 'avatar'))
+    to_user = fields.Nested('UserSchema', only=('id', 'name', 'avatar'))
 
 
 class TokenBlocklistSchema(SQLAlchemyAutoSchema):
