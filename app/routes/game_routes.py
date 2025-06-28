@@ -70,7 +70,7 @@ def add_game():
         return jsonify({'msg': 'Игра с таким названием уже существует'}), 409
 
 
-@game_bp.route('/uuid:game_id', methods=['PATCH'])
+@game_bp.route('/<uuid:game_id>', methods=['PATCH'])
 def update_game_route(game_id: UUID):
     """Updates data about specific game by ID."""
     game = get_game(game_id)
