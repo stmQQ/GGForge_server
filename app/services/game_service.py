@@ -52,6 +52,44 @@ def create_game(title: str, image_path: str = None, logo_path: str = None, servi
         raise ValueError("A game with this title already exists")
 
 
+def update_game(game, title=None, image_path=None, logo_path=None, service_name=None, type=None):
+    """
+    Updates a game by its ID.
+
+    Args:
+        game: The game to update.
+        title: Title of game.
+        image_path: Path to banner of game.
+        logo_path: Path to game's logo.
+        service_name: Service like Steam, BattleNet, etc.
+        type: Type of matches in game. solo/team
+
+    Returns:
+        Game: Updated game.
+
+    Raises:
+        ValueError: If the game is not found or cannot be updated due to dependencies.
+    """
+    if not game:
+        raise ValueError("Game not found")
+    if title:
+        game.title = title
+    if image_path:
+        game.image_path = image_path
+    if logo_path:
+        game.logo_path = logo_path
+    if service_name:
+        game.service_name = service_name
+    if type:
+        game.type = type
+    try:
+        db.session.add(game)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        raise ValueError("Error while updating database.")
+
+
 def delete_game(game_id: UUID):
     """
     Delete a game by its ID.
@@ -66,7 +104,8 @@ def delete_game(game_id: UUID):
         ValueError: If the game is not found or cannot be deleted due to dependencies.
     """
     game = Game.query.get_or_404(game_id)
-
+    if not game:
+        raise ValueError("Game not found")
     if game.tournaments or game.achievements:
         raise ValueError(
             "Cannot delete game with associated tournaments or achievements")

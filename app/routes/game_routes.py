@@ -7,7 +7,7 @@ from app.extensions import db
 from app.models import User
 from app.services.game_service import (
     get_all_games, get_game, create_game, delete_game,
-    create_achievement, assign_achievement_to_user, get_user_achievements
+    create_achievement, assign_achievement_to_user, get_user_achievements, update_game
 )
 from app.schemas import GameSchema, AchievementSchema, UserSchema
 
@@ -68,6 +68,30 @@ def add_game():
         return jsonify({'msg': str(e)}), 400
     except IntegrityError:
         return jsonify({'msg': 'Игра с таким названием уже существует'}), 409
+
+
+@game_bp.route('/uuid:game_id', methods=['PATCH'])
+def update_game_route(game_id: UUID):
+    """Updates data about specific game by ID."""
+    game = get_game(game_id)
+    data = request.get_json()
+    title = data['title']
+    image_path = data['image_path']
+    logo_path = data['logo_path']
+    service_name = data['service_name']
+    type = data['type']
+
+    try:
+        game = update_game(game, title, image_path,
+                           logo_path, service_name, type)
+        game_schema = GameSchema(
+            only=('id', 'title', 'image_path', 'logo_path', 'service_name', 'type'))
+        return {
+            'msg': 'Игра успешно обновлена',
+            'game': game_schema.dump(game)
+        }, 200
+    except ValueError as e:
+        return jsonify({'msg': str(e)}), 400
 
 
 @game_bp.route('/<uuid:game_id>', methods=['GET', 'OPTIONS'])
