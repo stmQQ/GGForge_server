@@ -48,16 +48,18 @@ def add_game():
     image_path = data.get('image_path')
     logo_path = data.get('logo_path')
     service_name = data.get('service_name')
+    type = data.get('type')
 
     try:
         game = create_game(
             title=title,
             image_path=image_path,
             logo_path=logo_path,
-            service_name=service_name
+            service_name=service_name,
+            type=type
         )
         game_schema = GameSchema(
-            only=('id', 'title', 'image_path', 'logo_path', 'service_name'))
+            only=('id', 'title', 'image_path', 'logo_path', 'service_name', 'type'))
         return {
             'msg': 'Игра успешно создана',
             'game': game_schema.dump(game)

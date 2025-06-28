@@ -16,7 +16,7 @@ def get_game(game_id: UUID):
     return Game.query.get_or_404(game_id)
 
 
-def create_game(title: str, image_path: str = None, logo_path: str = None, service_name: str = None):
+def create_game(title: str, image_path: str = None, logo_path: str = None, service_name: str = None, type: str = 'solo'):
     """
     Create a new game with the provided details.
 
