@@ -75,11 +75,16 @@ def update_game_route(game_id: UUID):
     """Updates data about specific game by ID."""
     game = get_game(game_id)
     data = request.get_json()
-    title = data['title']
-    image_path = data['image_path']
-    logo_path = data['logo_path']
-    service_name = data['service_name']
-    type = data['type']
+    if 'title' in data:
+        title = data['title']
+    if 'image_path' in data:
+        image_path = data['image_path']
+    if 'logo_path' in data:
+        logo_path = data['logo_path']
+    if 'service_name' in data:
+        service_name = data['service_name']
+    if 'type' in data:
+        type = data['type']
 
     try:
         game = update_game(game, title, image_path,
