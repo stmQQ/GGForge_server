@@ -29,7 +29,7 @@ from app.schemas import (
 import traceback
 
 from app.services.user_service import get_user_profile, save_image
-from apscheduler_tasks import scheduler
+from app.apscheduler_tasks import scheduler
 from dotenv import load_dotenv
 
 load_dotenv()
