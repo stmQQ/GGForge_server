@@ -45,14 +45,17 @@ def register_scheduler(app):
 
 
 def schedule_tournament_start(tournament_id, start_time: datetime, job_id: str):
-    with current_app.app_context():
-        print(
-            f"Scheduling tournament {tournament_id} to start at {start_time} (UTC) with job_id {job_id}")
-        scheduler.add_job(
-            func=start_tournament,
-            trigger=DateTrigger(run_date=start_time),
-            args=[tournament_id],
-            id=job_id,
-            replace_existing=True
-        )
-        print(scheduler._pending_jobs)
+    try:
+        with current_app.app_context():
+            print(
+                f"Scheduling tournament {tournament_id} to start at {start_time} (UTC) with job_id {job_id}")
+            scheduler.add_job(
+                func=start_tournament,
+                trigger=DateTrigger(run_date=start_time),
+                args=[tournament_id],
+                id=job_id,
+                replace_existing=True
+            )
+            print(scheduler._pending_jobs)
+    except Exception as e:
+        raise ValueError(e)
