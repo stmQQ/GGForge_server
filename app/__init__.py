@@ -1,16 +1,12 @@
 import os
-
-from flask import Flask, jsonify, make_response, redirect, request
+from flask import Flask, jsonify, request
 from .extensions import db, migrate, cors, jwt, ma
 from .config import config_by_name
-from .models import *
 from .routes import register_routes
-# from apscheduler_tasks import register_scheduler
-
+from .apscheduler_tasks import register_scheduler
 from dotenv import load_dotenv
 
 load_dotenv()
-
 
 # Проверка переменных окружения
 YANDEX_ACCESS_KEY_ID = os.getenv('YANDEX_ACCESS_KEY_ID')
@@ -27,14 +23,20 @@ if not all([YANDEX_ACCESS_KEY_ID, YANDEX_SECRET_KEY, BUCKET_NAME]):
 
 def create_app():
     app = Flask(__name__, static_folder='static')
-    app.config.from_object(config_by_name['dev'])
-    register_routes(app)
+    # Используем prod для Render
+    app.config.from_object(config_by_name['prod'])
+
     db.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app, resources={
                   r"/api/*": {"origins": app.config['CORS_ORIGINS']}})
     jwt.init_app(app)
     ma.init_app(app)
+    register_routes(app)
+
+    # Инициализация APScheduler
+    if not app.config.get('TESTING'):
+        register_scheduler(app)
 
     @app.route('/api/ping', methods=['GET', 'OPTIONS'])
     def ping():
@@ -43,3 +45,6 @@ def create_app():
         return jsonify({'status': 'ok'}), 200
 
     return app
+
+
+app = create_app()
