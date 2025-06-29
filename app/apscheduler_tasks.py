@@ -10,6 +10,9 @@ scheduler = APScheduler()
 
 
 def register_scheduler(app):
+    if scheduler.running:
+        print("Scheduler already running, skipping...")
+        return
     scheduler.init_app(app)
     try:
         with app.app_context():
@@ -17,7 +20,7 @@ def register_scheduler(app):
             scheduler.start()
             print("Scheduler started successfully")
 
-            # Restore scheduled tournaments
+            # Восстановить запланированные турниры
             scheduled_tournaments = ScheduledTournament.query.all()
             for scheduled in scheduled_tournaments:
                 now_utc = datetime.now(pytz.UTC)
