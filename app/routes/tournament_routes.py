@@ -4,12 +4,13 @@ from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 from pytz import UTC
+import pytz
 from app.models import Tournament, Team, User, db
 from flask import request, jsonify
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from app.extensions import db
 from app.models import Tournament, User, Game, ScheduledTournament
@@ -25,6 +26,7 @@ from app.schemas import (
     TournamentSchema, GroupStageSchema, PlayoffStageSchema, PrizeTableSchema,
     MatchSchema, MapSchema
 )
+from apscheduler.triggers.date import DateTrigger
 
 import traceback
 
@@ -71,6 +73,13 @@ def is_tournament_creator_or_admin(tournament_id: UUID):
 @tournament_bp.route('/jobs', methods=['GET'])
 @jwt_required()
 def get_active_jobs():
+    scheduler.add_job(
+        func=lambda: print(f"Test job executed at {datetime.now(pytz.UTC)}"),
+        trigger=DateTrigger(run_date=datetime.now(
+            pytz.UTC) + timedelta(minutes=1)),
+        id='test_job',
+        jobstore='default'
+    )
     """Retrieve list of active scheduled jobs."""
     try:
         jobs = scheduler.get_jobs()
