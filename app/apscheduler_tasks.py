@@ -9,7 +9,7 @@ from app.models import ScheduledTournament
 scheduler = APScheduler()
 
 
-def init_scheduler(app):
+def register_scheduler(app):
     scheduler.init_app(app)
     try:
         with app.app_context():
