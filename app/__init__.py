@@ -29,7 +29,11 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     cors.init_app(app, resources={
-                  r"/api/*": {"origins": app.config['CORS_ORIGINS']}})
+        r"/api/*": {
+            "origins": app.config['CORS_ORIGINS'],
+            "allow_headers": ["Content-Type", "X-Timezone", "Authorization"]
+        }
+    })
     jwt.init_app(app)
     ma.init_app(app)
     register_routes(app)
