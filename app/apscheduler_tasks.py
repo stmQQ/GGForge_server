@@ -55,3 +55,4 @@ def schedule_tournament_start(tournament_id, start_time: datetime, job_id: str):
             id=job_id,
             replace_existing=True
         )
+        print(scheduler._pending_jobs)
