@@ -616,7 +616,9 @@ def unregister_for_tournament(tournament_id: UUID, participant_id: UUID, is_team
 
 
 def start_tournament(tournament_id: UUID):
+    print("I AM GAY!")
     from main import app
+    print("I AM VERY GAY!")
     with app.app_context():
         print(
             f"Attempting to start tournament {tournament_id} at {datetime.now(UTC)}")
