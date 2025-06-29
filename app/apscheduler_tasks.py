@@ -47,6 +47,7 @@ def register_scheduler(app):
 def schedule_tournament_start(tournament_id, start_time: datetime, job_id: str):
     try:
         with current_app.app_context():
+            print("SCHEDULER         ", scheduler)
             print(
                 f"Scheduling tournament {tournament_id} to start at {start_time} (UTC) with job_id {job_id}")
             scheduler.add_job(
@@ -57,5 +58,5 @@ def schedule_tournament_start(tournament_id, start_time: datetime, job_id: str):
                 replace_existing=True
             )
             print(scheduler._pending_jobs)
-    except Exception as e:
+    except ValueError as e:
         raise ValueError(e)
