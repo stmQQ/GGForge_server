@@ -29,6 +29,7 @@ from app.schemas import (
 import traceback
 
 from app.services.user_service import get_user_profile, save_image
+from apscheduler_tasks import scheduler
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -65,6 +66,26 @@ def is_tournament_creator_or_admin(tournament_id: UUID):
     if not user.is_admin and str(tournament.creator_id) != user_id:
         return jsonify({'msg': 'Требуются права администратора или создателя турнира'}), 403
     return None
+
+
+@tournament_bp.route('/jobs', methods=['GET'])
+@jwt_required()
+def get_active_jobs():
+    """Retrieve list of active scheduled jobs."""
+    try:
+        jobs = scheduler.get_jobs()
+        job_list = [
+            {
+                'id': job.id,
+                'name': job.name,
+                'next_run_time': job.next_run_time.isoformat() if job.next_run_time else None,
+                'args': str(job.args),
+                'trigger': str(job.trigger)
+            } for job in jobs
+        ]
+        return jsonify({'msg': 'Active jobs retrieved', 'jobs': job_list}), 200
+    except Exception as e:
+        return jsonify({'msg': f'Error retrieving jobs: {str(e)}'}), 500
 
 
 @tournament_bp.route('/', methods=['POST', 'OPTIONS'])

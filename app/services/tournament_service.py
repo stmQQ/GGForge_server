@@ -616,68 +616,60 @@ def unregister_for_tournament(tournament_id: UUID, participant_id: UUID, is_team
 
 
 def start_tournament(tournament_id: UUID):
-    """
-    Start a tournament, setting it to 'ongoing' and assigning participants to groups or playoff stage.
-    Validates that matches are correctly set up and handles cases with insufficient participants.
-
-    Args:
-        tournament_id: The UUID of the tournament.
-
-    Returns:
-        Tournament: The updated tournament object.
-
-    Raises:
-        ValueError: If tournament, participants, or match setup is invalid.
-    """
     from main import app
     with app.app_context():
-        tournament = get_tournament(tournament_id)
-        if tournament.status != "open":
-            raise ValueError("Tournament is not in open status")
-
-        total_participants = len(
-            tournament.participants) if tournament.type == 'solo' else len(tournament.teams)
-        if total_participants < 2:
-            tournament.status = 'cancelled'
-            db.session.add(tournament)
-            try:
-                scheduled = ScheduledTournament.query.filter_by(
-                    tournament_id=tournament_id).first()
-                if scheduled:
-                    db.session.delete(scheduled)
-            except:
-                pass
-            db.session.commit()
-            raise ValueError("Tournament requires at least 2 participants")
-
+        print(
+            f"Attempting to start tournament {tournament_id} at {datetime.now(UTC)}")
         try:
+            tournament = get_tournament(tournament_id)
+            print(f"Tournament status: {tournament.status}")
+            if tournament.status != "open":
+                print(f"Tournament {tournament_id} not in open status")
+                raise ValueError("Tournament is not in open status")
+            total_participants = len(
+                tournament.participants) if tournament.type == 'solo' else len(tournament.teams)
+            print(f"Total participants: {total_participants}")
+            if total_participants < 2:
+                tournament.status = 'cancelled'
+                db.session.add(tournament)
+                try:
+                    scheduled = ScheduledTournament.query.filter_by(
+                        tournament_id=tournament_id).first()
+                    if scheduled:
+                        db.session.delete(scheduled)
+                        print(f"Deleted scheduled tournament {tournament_id}")
+                except Exception as e:
+                    print(f"Error deleting scheduled tournament: {str(e)}")
+                db.session.commit()
+                raise ValueError("Tournament requires at least 2 participants")
             scheduled = ScheduledTournament.query.filter_by(
                 tournament_id=tournament_id).first()
             if scheduled:
                 db.session.delete(scheduled)
-
-            # Set tournament status and start time
+                print(f"Deleted scheduled tournament {tournament_id}")
             tournament.status = "ongoing"
             tournament.start_time = datetime.now(UTC)
             db.session.add(tournament)
-
-            # Assign participants
             if tournament.group_stage:
+                print(
+                    f"Assigning participants to groups for tournament {tournament_id}")
                 assign_participants_to_groups(tournament_id)
-                # Новое: назначение участников матчам
                 assign_participants_to_group_matches(tournament_id)
             else:
+                print(
+                    f"Assigning participants to playoff stage for tournament {tournament_id}")
                 assign_participants_to_playoff_stage(tournament_id)
-                # Validate match setup
                 if tournament.playoff_stage:
+                    print(
+                        f"Validating match setup for tournament {tournament_id}")
                     validate_match_setup(tournament_id)
-
             db.session.commit()
+            print(f"Tournament {tournament_id} started successfully")
             return tournament
-
         except Exception as e:
             db.session.rollback()
-            raise ValueError(f"Failed to start tournament: {str(e)}")
+            print(f"Error starting tournament {tournament_id}: {str(e)}")
+            raise
 
 
 def validate_match_setup(tournament_id: UUID):
@@ -1981,7 +1973,7 @@ def assign_participants_to_group_matches(tournament_id: UUID):
                 raise ValueError(
                     f"Insufficient matches for group {group.letter}")
             for m in matches[expected_matches:]:
-                m.status = 'cancelled' #TODO Fix
+                m.status = 'cancelled'  # TODO Fix
 
             # Назначаем участников матчам в формате round-robin
             match_index = 0

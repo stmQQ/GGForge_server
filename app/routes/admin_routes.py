@@ -16,3 +16,5 @@ def make_admin():
 
     db.session.add(user)
     db.session.commit()
+
+
