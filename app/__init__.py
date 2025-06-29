@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from .extensions import db, migrate, cors, jwt, ma
 from .config import config_by_name
 from .routes import register_routes
-from .apscheduler_tasks import register_scheduler
+from .apscheduler_tasks import init_scheduler
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -40,7 +40,7 @@ def create_app():
 
     # Инициализация APScheduler
     if not app.config.get('TESTING'):
-        register_scheduler(app)
+        init_scheduler(app)
 
     @app.route('/api/ping', methods=['GET', 'OPTIONS'])
     def ping():
