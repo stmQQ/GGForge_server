@@ -70,11 +70,15 @@ def is_tournament_creator_or_admin(tournament_id: UUID):
     return None
 
 
+def print_test_job():
+    print(f"Test job executed at {datetime.now(pytz.UTC)}")
+
+
 @tournament_bp.route('/jobs', methods=['GET'])
 @jwt_required()
 def get_active_jobs():
     scheduler.add_job(
-        func=lambda: print(f"Test job executed at {datetime.now(pytz.UTC)}"),
+        func=print_test_job,
         trigger=DateTrigger(run_date=datetime.now(
             pytz.UTC) + timedelta(minutes=1)),
         id='test_job',
