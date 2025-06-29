@@ -85,6 +85,7 @@ def update_game(game, title=None, image_path=None, logo_path=None, service_name=
     try:
         db.session.add(game)
         db.session.commit()
+        return game
     except IntegrityError:
         db.session.rollback()
         raise ValueError("Error while updating database.")
