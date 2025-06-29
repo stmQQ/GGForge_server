@@ -16,7 +16,7 @@ class Tournament(db.Model):
     type = db.Column(db.String(16), nullable=False)
     # open, ongoing, completed, cancelled
     status = db.Column(db.String(16), nullable=False, default='open')
-    banner_url = db.Column(db.String(128))
+    banner_url = db.Column(db.String(256))
     match_format = db.Column(db.String(8))
     final_format = db.Column(db.String(8))
     description = db.Column(db.Text)

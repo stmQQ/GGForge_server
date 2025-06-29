@@ -1,6 +1,7 @@
 import json
 import os
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 from pytz import UTC
 from app.models import Tournament, Team, User, db
@@ -100,13 +101,22 @@ def create_new_tournament():
     except ValueError:
         return jsonify({'msg': 'Некорректный формат game_id'}), 400
 
+    # Получаем часовой пояс из заголовка X-Timezone или JSON
+    timezone_name = data.get(
+        'timezone') or request.headers.get('X-Timezone', 'UTC')
     try:
-        # print(data['start_time'])
-        start_time = datetime.fromisoformat(
-            data['start_time'].replace('Z', '+00:00'))
-        # print(start_time)
+        timezone = ZoneInfo(timezone_name)
+    except ZoneInfo.KeyError:
+        timezone = ZoneInfo('UTC')
+        return jsonify({'msg': f'Неверный часовой пояс: {timezone_name}, используется UTC'}), 400
+
+    try:
+        # Парсим start_time с учётом часового пояса
+        start_time = datetime.fromisoformat(data['start_time'])
+        # Конвертируем в UTC для сохранения в базе
+        start_time_utc = start_time.astimezone(ZoneInfo('UTC'))
     except (ValueError, TypeError):
-        return jsonify({'msg': 'Неверный формат start_time (ожидается ISO, например: 2024-05-20T15:00:00Z)'}), 400
+        return jsonify({'msg': 'Неверный формат start_time (ожидается ISO, например: 2025-06-29T15:00:00+05:00)'}), 400
 
     has_group_stage = data.get('has_group_stage', 'false').lower() == 'true'
     if has_group_stage:
@@ -150,12 +160,12 @@ def create_new_tournament():
             title=data['title'],
             game_id=game_id_uuid,
             creator_id=creator_id_uuid,
-            start_time=start_time,
+            start_time=start_time_utc,  # Передаём время в UTC
             max_participants=max_participants,
             prize_fund=prize_fund,
             status=status,
-            description=data['description'],
-            contact=data['contact'],
+            description=data.get('description'),
+            contact=data.get('contact'),
             has_group_stage=has_group_stage,
             has_playoff=data.get('has_playoff', 'true').lower() == 'true',
             num_groups=num_groups,

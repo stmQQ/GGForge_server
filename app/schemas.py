@@ -1,5 +1,8 @@
 import os
 import uuid
+from zoneinfo import ZoneInfo
+
+from flask import request
 from app.models import Match, PlayoffStageMatch, Map
 from app.extensions import db
 from marshmallow import fields, post_dump, validate
@@ -207,6 +210,24 @@ class TournamentSchema(SQLAlchemyAutoSchema):
     prize_table = fields.Nested(PrizeTableSchema, allow_none=True)
 
     start_time = fields.DateTime(format='iso')
+
+    @post_dump
+    def adjust_timezone(self, data, **kwargs):
+        if 'start_time' in data and data['start_time']:
+            # Получаем часовой пояс из заголовка X-Timezone или JSON
+            timezone_name = request.headers.get('X-Timezone') or request.get_json(silent=True).get('timezone', 'UTC') or 'UTC'
+            try:
+                timezone = ZoneInfo(timezone_name)
+            except ZoneInfo.KeyError:
+                timezone = ZoneInfo('UTC')
+
+            # Парсим UTC время из базы
+            utc_time = datetime.fromisoformat(data['start_time'].replace('Z', '+00:00'))
+            # Конвертируем в локальный пояс
+            local_time = utc_time.astimezone(timezone)
+            # Форматируем в ISO
+            data['start_time'] = local_time.isoformat()
+        return data
 
 
 class TeamSchema(SQLAlchemyAutoSchema):
