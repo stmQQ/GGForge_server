@@ -58,9 +58,9 @@ def create_team_route():
 
         if not title:
             return jsonify({'msg': 'Необходимо указать title'}), 400
-
         logo_path = None
         if logo_file:
+            print("LOGO FILE IS HERE")
             try:
                 logo_path = save_image(
                     logo_file, 'team_logo', user_id=user_id_uuid)

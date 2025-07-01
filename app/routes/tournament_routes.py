@@ -81,7 +81,7 @@ def get_active_jobs():
         func=print_test_job,
         trigger=DateTrigger(run_date=datetime.now(
             pytz.UTC) + timedelta(minutes=1)),
-        id='test_job',
+        id=f'test_job_',
         jobstore='default'
     )
     """Retrieve list of active scheduled jobs."""
