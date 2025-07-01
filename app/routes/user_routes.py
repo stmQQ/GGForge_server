@@ -50,7 +50,8 @@ def get_profile(user_id):
 @jwt_required()
 def get_my_profile():
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user_id_uuid = UUID(user_id)
+    user = User.query.get(user_id_uuid)
 
     if not user:
         return jsonify({'msg': 'Пользователь не найден'}), 404
@@ -105,7 +106,7 @@ def delete_my_profile():
 
     if not user:
         return jsonify({'msg': 'Пользователь не найден'}), 404
-    
+
     if user.avatar:
         delete_image(user.avatar)
 
@@ -389,7 +390,7 @@ def add_game_account():
 
     if existing_connection:
         existing_account = GameAccount.query.filter_by(
-            user_id = user_id,
+            user_id=user_id,
             connection_id=existing_connection.id
         ).first()
 
