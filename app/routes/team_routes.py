@@ -63,7 +63,7 @@ def create_team_route():
             print("LOGO FILE IS HERE")
             try:
                 logo_path = save_image(
-                    logo_file, 'team_logo', user_id=user_id_uuid)
+                    logo_file, 'team_logo', entity_id=user_id_uuid)
             except ValueError as e:
                 return jsonify({'msg': str(e)}), 400
 
