@@ -1078,7 +1078,7 @@ def generate_single_elimination_bracket(tournament_id: UUID, participants: list[
     return playoff_stage
 
 
-def complete_map(tournament_id: UUID, match_id: UUID, map_id: UUID, winner_id: UUID | None):
+def complete_map(tournament_id: UUID, match_id: UUID, map_id: UUID, winner_id: UUID | None, external_url: str | None):
     """
     Complete a map by setting its winner, updating match scores, and completing the match if needed.
     Handles cases with one participant and draws (winner_id=None).
@@ -1125,6 +1125,7 @@ def complete_map(tournament_id: UUID, match_id: UUID, map_id: UUID, winner_id: U
             match.participant1_score += 1
         elif winner_id == match.participant2_id:
             match.participant2_score += 1
+        map_.external_url = external_url
 
         db.session.add(map_)
         db.session.add(match)
