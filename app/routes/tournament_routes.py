@@ -782,17 +782,6 @@ def complete_map_route(tournament_id, match_id, map_id):
         serialized_match["participant1"] = participant1
         serialized_match["participant2"] = participant2
 
-        serialized_match["participant1"]["avatar"] = (
-            f"{API_URL}/{serialized_match['participant1']['avatar']}"
-            if serialized_match["participant1"]["avatar"]
-            else None
-        )
-        serialized_match["participant2"]["avatar"] = (
-            f"{API_URL}/{serialized_match['participant2']['avatar']}"
-            if serialized_match["participant2"]["avatar"]
-            else None
-        )
-
         response = {
             "msg": "Map updated",
             "map": serialized_map,
