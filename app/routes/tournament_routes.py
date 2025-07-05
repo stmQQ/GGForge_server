@@ -920,8 +920,6 @@ def start_match_route(tournament_id, match_id):
         participant2 = get_user_profile(updated_match.participant2_id)
         match_data["participant1"] = participant1
         match_data["participant2"] = participant2
-        match_data["participant1"]["avatar"] = f"{API_URL}/{match_data['participant1']['avatar']}" if match_data["participant1"]["avatar"] else None
-        match_data["participant2"]["avatar"] = f"{API_URL}/{match_data['participant2']['avatar']}" if match_data["participant2"]["avatar"] else None
 
         return jsonify({
             "msg": "Match started",
