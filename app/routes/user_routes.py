@@ -292,12 +292,15 @@ def respond_to_friend_request(user_id):
     action = request.json.get('action')
 
     # Ищем заявку: либо от текущего пользователя к user_id, либо от user_id к текущему
+    print(current_user_id, type(current_user_id))
+    print(user_id_uuid, type(user_id_uuid))
     friend_request = UserRequest.query.filter(
         (UserRequest.from_user_id == current_user_id) & (UserRequest.to_user_id == user_id_uuid) |
         (UserRequest.from_user_id == user_id_uuid) & (
             UserRequest.to_user_id == current_user_id)
     ).first()
-
+    print(friend_request)
+    print(str(friend_request.query))
     if not friend_request:
         return jsonify({'msg': 'Заявка не найдена'}), 404
 
