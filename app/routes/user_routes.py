@@ -406,7 +406,7 @@ def add_game_account():
     )
 
     game_account_schema = GameAccountSchema(only=(
-        'id', 'game.id', 'game.title', 'connection.service_name', 'connection.external_user_url'))
+        'id', 'game.id', 'game.title', 'game.logo_path', 'connection.service_name', 'connection.external_user_url'))
     return {
         'msg': 'Игровой аккаунт успешно добавлен',
         'account': game_account_schema.dump(account)
