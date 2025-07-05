@@ -545,7 +545,6 @@ def start_tournament_route(tournament_id: UUID):
 
     try:
         tournament = start_tournament(tournament_id)
-        db.session.commit()
         tournament_schema = TournamentSchema(
             only=('id', 'title', 'start_time', 'status')
         )
