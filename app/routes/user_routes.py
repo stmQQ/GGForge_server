@@ -286,14 +286,15 @@ def get_friend_requests():
 @user_bp.route('/me/friends/requests/<uuid:user_id>', methods=['POST'])
 @jwt_required()
 def respond_to_friend_request(user_id):
+    user_id_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
     current_user_id = UUID(get_jwt_identity())
 
     action = request.json.get('action')
 
     # Ищем заявку: либо от текущего пользователя к user_id, либо от user_id к текущему
     friend_request = UserRequest.query.filter(
-        (UserRequest.from_user_id == current_user_id) & (UserRequest.to_user_id == user_id) |
-        (UserRequest.from_user_id == user_id) & (
+        (UserRequest.from_user_id == current_user_id) & (UserRequest.to_user_id == user_id_uuid) |
+        (UserRequest.from_user_id == user_id_uuid) & (
             UserRequest.to_user_id == current_user_id)
     ).first()
 
