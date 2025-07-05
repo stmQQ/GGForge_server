@@ -766,10 +766,11 @@ def complete_map_route(tournament_id, match_id, map_id):
 
         # winner_id может быть null (для ничьей)
         winner_id = data.get("winner_id")
+        external_url = data.get("external_url")
         if winner_id is not None:
             winner_id = UUID(winner_id)
 
-        updated_map = complete_map(tournament_id, match_id, map_id, winner_id)
+        updated_map = complete_map(tournament_id, match_id, map_id, winner_id, external_url)
         updated_match = get_match(tournament_id, match_id)
         participant1 = get_user_profile(updated_match.participant1_id)
         participant2 = get_user_profile(updated_match.participant2_id)
