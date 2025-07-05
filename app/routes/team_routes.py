@@ -15,6 +15,8 @@ from app.services.user_service import save_image
 
 team_bp = Blueprint('team_bp', __name__, url_prefix='/api/teams')
 
+DEFAULT_TEAM_LOGO_URL = 'https://storage.yandexcloud.net/ggforge-bucket/team_logos/default.png'
+
 
 def is_team_leader_or_admin(team_id: UUID):
     """Check if the current user is the team leader or an admin."""
@@ -58,7 +60,7 @@ def create_team_route():
 
         if not title:
             return jsonify({'msg': 'Необходимо указать title'}), 400
-        logo_path = None
+        logo_path = DEFAULT_TEAM_LOGO_URL
         if logo_file:
             print("LOGO FILE IS HERE")
             try:

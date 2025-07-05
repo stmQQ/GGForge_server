@@ -20,6 +20,9 @@ from datetime import datetime, UTC
 
 user_bp = Blueprint('user', __name__, url_prefix='/api/users')
 
+DEFAULT_AVATAR_URL = 'https://storage.yandexcloud.net/ggforge-bucket/avatars/default.png'
+
+
 # region Profiles
 
 
@@ -75,7 +78,7 @@ def update_my_profile():
     password = data.get('password')
     avatar_file = request.files.get('avatar')
 
-    avatar_url = None
+    avatar_url = DEFAULT_AVATAR_URL
     if avatar_file:
         try:
             delete_image(user.avatar)
@@ -406,7 +409,7 @@ def add_game_account():
     )
 
     game_account_schema = GameAccountSchema(only=(
-        'id', 'game.id', 'game.title', 'connection.service_name', 'connection.external_user_url'))
+        'id', 'game.id', 'game.title', 'game.logo_path', 'connection.service_name', 'connection.external_user_url'))
     return {
         'msg': 'Игровой аккаунт успешно добавлен',
         'account': game_account_schema.dump(account)

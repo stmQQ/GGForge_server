@@ -16,6 +16,8 @@ from app.schemas import UserSchema  # Import the UserSchema
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
+DEFAULT_AVATAR_URL = 'https://storage.yandexcloud.net/ggforge-bucket/avatars/default.png'
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -28,15 +30,14 @@ def register():
         return jsonify({'msg': 'Заполните все поля'}), 400
 
     avatar_url = save_image(
-        avatar_file, 'avatar') if avatar_file else "/static/avatars/default.png"
+        avatar_file, 'avatar') if avatar_file else DEFAULT_AVATAR_URL
 
     try:
         user = create_user(name=name, email=email,
                            password=password, avatar=avatar_url)
         user.is_online = True
         if avatar_file:
-            new_avatar_url = save_image(avatar_file, 'avatar', user_id=user.id)
-            user.avatar = new_avatar_url
+            user.avatar = avatar_url
             db.session.commit()
     except IntegrityError:
         db.session.rollback()
